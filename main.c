@@ -18,8 +18,9 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "smv_canbus.h"
 #include "smv_ads1118.h"
+#include "smv_braketrans.h"
+#include "smv_canbus.h"
 #include <string.h>
 
 /* Private includes ----------------------------------------------------------*/
@@ -129,7 +130,7 @@ int main(void)
 
 void sender (void){
 	adc1.sweep(&adc1, adc_read);
-	can1.send(&can1, adc_read [0], Pressure);
+	can1.send(&can1, ADCtoPSI(adc_read[0]), Pressure);
 //	can1.send(&can1,adc_read [1], Accel_x);
 //	can1.send(&can1,adc_read [2], Accel_y);
 //	can1.send(&can1,adc_read [3], Accel_z);
