@@ -130,7 +130,7 @@ int main(void)
 
 void sender (void){
 	adc1.sweep(&adc1, adc_read);
-	can1.send(&can1, ADCtoPSI(adc_read[0]), Pressure);
+	can1.send(&can1, VoltageToPSI(adc_read[0]), Pressure);
 //	can1.send(&can1,adc_read [1], Accel_x);
 //	can1.send(&can1,adc_read [2], Accel_y);
 //	can1.send(&can1,adc_read [3], Accel_z);
