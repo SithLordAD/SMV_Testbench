@@ -18,13 +18,13 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "smv_canbus.h"
-#include "smv_ads1118.h"
-#include <string.h>
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include <stdio.h>
+#include "smv_ads1118.h"
+#include "smv_canbus.h"
+#include "smv_board_enums.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -50,25 +50,20 @@ SPI_HandleTypeDef hspi1;
 UART_HandleTypeDef huart2;
 
 /* USER CODE BEGIN PV */
-
+CANBUS can1;
+SMV_ADS1118 adc1;
+//static double test [4] = {0};
+volatile static double can_read [4] = {0};
+static double adc_read[4] = {0};
+volatile double testdoub = 0;
+uint16_t i = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-static void MX_CAN1_Init(void);
-static void MX_SPI1_Init(void);
-void sender (void);
-void receiver (void);
-
 /* USER CODE BEGIN PFP */
-CANBUS can1;
-SMV_ADS1118 adc1;
-double adc_read [4] = {0};
-volatile char can_data_type [20] = {0};
-volatile char can_hardware [20] = {0};
-
 
 /* USER CODE END PFP */
 
@@ -93,7 +88,8 @@ int main(void)
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  /* USER CODE BEGIN Init *
+  /* USER CODE BEGIN Init */
+
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -107,51 +103,40 @@ int main(void)
   MX_GPIO_Init();
   MX_USART2_UART_Init();
   /* USER CODE BEGIN 2 */
+//  adc1 = ADS_new();
+//  adc1.init(&adc1, &hspi1, GPIOA, GPIO_PIN_4, GPIOA, GPIO_PIN_6);
 
   can1 = CAN_new();
-  can1.init(&can1, HS1, &hcan1);
-  adc1 = ADS_new();
-  adc1.init(&adc1, &hspi1, GPIOA, GPIO_PIN_4);
+  can1.init(&can1, UI, &hcan1);
   can1.begin(&can1);
+
+  uint32_t timer = HAL_GetTick();
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
+
   while (1)
   {
-    /* USER CODE END WHILE */
-	  sender();
-//	  receiver();
-    /* USER CODE BEGIN 3 */
+//	  adc1.sweep(&adc1, adc_read);
+//	  can1.send(&can1, adc_read[0], Pressure);
+//	  can1.send(&can1, adc_read[1], Accel_x);
+//	  can1.send(&can1, adc_read[2], Accel_y);
+//	  can1.send(&can1, adc_read[3], Accel_z);
+	  if ((HAL_GetTick() - timer)> 10){
+		  timer = HAL_GetTick();
+		  can1.send(&can1, 53, Horn);
+		  can1.send(&can1, 20, Wipers);
+	  }
+
+	  i+=1;
   }
+
+    /* USER CODE END WHILE */
+    /* USER CODE BEGIN 3 */
+}
   /* USER CODE END 3 */
-}
 
-void sender (void){
-	adc1.sweep(&adc1, adc_read);
-	can1.send(&can1, adc_read [0], Pressure);
-//	can1.send(&can1,adc_read [1], Accel_x);
-//	can1.send(&can1,adc_read [2], Accel_y);
-//	can1.send(&can1,adc_read [3], Accel_z);
-	HAL_Delay(10);
-}
-
-void receiver(void){
-	strcpy(can_data_type, can1.getDataType(&can1));
-	strcpy(can_hardware, can1.getHardware(&can1));
-
-	if (strcmp(can_data_type, "Pressure") == 0){
-		adc_read[0] = can1.getData(&can1);
-	}else if (strcmp(can_data_type, "Accel_x") == 0){
-		adc_read [1] = can1.getData(&can1);
-	}else if (strcmp(can_data_type, "Accel_y") == 0){
-		adc_read [2] = can1.getData(&can1);
-	}else if (strcmp(can_data_type, "Accel_z") == 0){
-		adc_read [3] = can1.getData(&can1);
-	}
-
-	HAL_Delay(10);
-}
 
 
 /**
@@ -198,81 +183,6 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-}
-
-/**
-  * @brief CAN1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_CAN1_Init(void)
-{
-
-  /* USER CODE BEGIN CAN1_Init 0 */
-
-  /* USER CODE END CAN1_Init 0 */
-
-  /* USER CODE BEGIN CAN1_Init 1 */
-
-  /* USER CODE END CAN1_Init 1 */
-  hcan1.Instance = CAN1;
-  hcan1.Init.Prescaler = 16;
-  hcan1.Init.Mode = CAN_MODE_NORMAL;
-  hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan1.Init.TimeSeg1 = CAN_BS1_1TQ;
-  hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
-  hcan1.Init.TimeTriggeredMode = DISABLE;
-  hcan1.Init.AutoBusOff = DISABLE;
-  hcan1.Init.AutoWakeUp = DISABLE;
-  hcan1.Init.AutoRetransmission = DISABLE;
-  hcan1.Init.ReceiveFifoLocked = DISABLE;
-  hcan1.Init.TransmitFifoPriority = DISABLE;
-  if (HAL_CAN_Init(&hcan1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN CAN1_Init 2 */
-
-  /* USER CODE END CAN1_Init 2 */
-
-}
-
-/**
-  * @brief SPI1 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_SPI1_Init(void)
-{
-
-  /* USER CODE BEGIN SPI1_Init 0 */
-
-  /* USER CODE END SPI1_Init 0 */
-
-  /* USER CODE BEGIN SPI1_Init 1 */
-
-  /* USER CODE END SPI1_Init 1 */
-  /* SPI1 parameter configuration*/
-  hspi1.Instance = SPI1;
-  hspi1.Init.Mode = SPI_MODE_MASTER;
-  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
-  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
-  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
-  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
-  hspi1.Init.NSS = SPI_NSS_SOFT;
-  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
-  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
-  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
-  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-  hspi1.Init.CRCPolynomial = 10;
-  if (HAL_SPI_Init(&hspi1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN SPI1_Init 2 */
-
-  /* USER CODE END SPI1_Init 2 */
-
 }
 
 /**
@@ -347,9 +257,37 @@ static void MX_GPIO_Init(void)
   /* USER CODE END MX_GPIO_Init_2 */
 }
 
-/* USER CODE BEGIN 4 */
 
+
+/* USER CODE BEGIN 4 */
+void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *CanHandle)
+
+{
+    /* Get RX message from FIFO0 and fill the data on the related FIFO0 user declared header
+       (RxHeaderFIFO0) and table (RxDataFIFO0) */
+    if (HAL_CAN_GetRxMessage(CanHandle, CAN_RX_FIFO0, &(can1.RxHeaderFIFO0), can1.RxDataFIFO0) != HAL_OK)
+    {
+        /* Reception Error */
+       Error_Handler();
+    }else{
+    	//HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+		CAN_Interrupt_Helper(&can1);
+
+		if (can1.getHardwareRaw(&can1) == HS3 && can1.getDataTypeRaw(&can1) == Pressure){
+			can_read [0] = can1.getData(&can1);
+		}else if (can1.getHardwareRaw(&can1) == HS3 && can1.getDataTypeRaw(&can1) == Accel_x){
+			can_read [1] = can1.getData(&can1);
+		}else if (can1.getHardwareRaw(&can1) == HS3 && can1.getDataTypeRaw(&can1) == Accel_y){
+			can_read [2] = can1.getData(&can1);
+		}else if (can1.getHardwareRaw(&can1) == HS3 && can1.getDataTypeRaw(&can1) == Accel_z){
+			can_read [3] = can1.getData(&can1);
+		}
+    }
+}
 /* USER CODE END 4 */
+
+
+
 
 /**
   * @brief  This function is executed in case of error occurrence.

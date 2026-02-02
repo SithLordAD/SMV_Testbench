@@ -246,6 +246,16 @@ static double CAN_GetData(CANBUS *can){
 	return can->data;
 }
 
+
+
+static int CAN_GetHardwareRaw(CANBUS *can){
+	return can->rec_hardware;
+}
+
+static int CAN_GetDataTypeRaw(CANBUS *can){
+	return can->rec_dataType;
+}
+
 /*
 Purpose: return the dataType string assigned in the CAN interrupt
 */
@@ -270,12 +280,14 @@ void CAN_Interrupt_Helper(CANBUS *can){
 
 	//assign hardware array
 	uint8_t hardware_id = ((can->RxHeaderFIFO0.StdId)>>7)& 0x0F;
+	can->rec_hardware = hardware_id;
 	const char* hardware_string = devices[hardware_id];
 	memcpy(can->hardware, hardware_string , strlen(hardware_string)+1);
 
 
 	//assign dataType array
 	uint8_t dataType_id = (can->RxHeaderFIFO0.StdId)&0x0F;
+	can->rec_dataType = dataType_id;
 	const char* dataType_string = readDataType(hardware_id, dataType_id);
 	memcpy(can->dataType, dataType_string, strlen(dataType_string)+1);
 }
@@ -348,6 +360,8 @@ CANBUS CAN_new(void) {
 	can.getData = CAN_GetData;
 	can.getDataType = CAN_GetDataType;
 	can.getHardware = CAN_GetHardware;
+	can.getDataTypeRaw = CAN_GetDataTypeRaw;
+	can.getHardwareRaw = CAN_GetHardwareRaw;
 	can.addFilterDevice = CAN_AddFilterDevice;
 	can.addFilterDeviceData = CAN_AddFilterDeviceData;
 	can.send = CAN_Send;
