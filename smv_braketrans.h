@@ -11,7 +11,8 @@
 #define PSI_MAX					500.0
 #define PSI_MIN					0.0
 
-double ADCtoPSI(double voltage)
+/* Voltage for brake transducer is 0-4.5V */
+double VoltageToPSI(double voltage)
 {
 	double psi = (BRAKE_TRANS_SLOPE * voltage) - BRAKE_TRANS_OFFSET;
 	if (psi < PSI_MIN) psi = PSI_MIN;
